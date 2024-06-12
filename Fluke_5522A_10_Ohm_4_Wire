@@ -1,0 +1,50 @@
+import pyvisa
+
+# Initialize the resource manager
+rm = pyvisa.ResourceManager()
+
+# Open the GPIB instrument at address 4
+fluke5522a = rm.open_resource('GPIB0::4::INSTR')
+
+# Set a longer timeout (10 seconds)
+fluke5522a.timeout = 10000
+
+# Function to send a command and read the response
+def send_command(command):
+    try:
+        # Write the command to the instrument
+        fluke5522a.write(command)
+        # If the command is a query, read the response
+        if '?' in command:
+            response = fluke5522a.read()
+            return response.strip()
+        return None
+    except pyvisa.errors.VisaIOError as e:
+        print(f"VISA IO Error: {e}")
+        return None
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
+
+# Set the Fluke 5522A to output 1 ohm in 4-wire mode
+try:
+    # Enable 4-wire mode
+    send_command('ZCOMP WIRE4')
+    
+    # Set resistance to 1 ohm and activate the output
+    send_command('OUT 1Ohm;OPER')
+    
+    # Verify the settings (if necessary)
+    # resistance_set = send_command('OUT?')
+    # print(f'Set resistance to: {resistance_set} ohms')
+
+    # Close Connection
+    fluke5522a.close()
+    print('Closed instrument connection')
+
+except Exception as err:
+    print('Exception: ' + str(err))
+
+finally:
+    # Perform clean up operations
+    print('Complete')
